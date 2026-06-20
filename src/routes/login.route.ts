@@ -6,7 +6,7 @@ const router = Router();
 const authenticationController = new AuthenticationController();
 
 router.post(
-    "/login",
+    "/",
     authenticationController.login
 );
 

@@ -1,8 +1,5 @@
 import express from "express";
 import { SERVER_CONFIG } from "./constant/constant";
-import bookRoutes from "./routes/book.route";
-import authorRoutes from "./routes/author.route";
-import categoryRoutes from "./routes/category.route";
 import { testDbConnection } from "./database";
 
 const app = express();
@@ -15,17 +12,10 @@ app.use((req, res, next) => {
     console.log('req.body:', req.body);
     next();
 });
-import loginRoutes from "./routes/login.route";
-import registerRoutes from "./routes/registed.route";
-import userRoutes from "./routes/user.route";
+import apiRoutes from "./routes/api.route";
 import { globalErrorHandler } from "./middleware/error.middleware";
 
-app.use("/book", bookRoutes);
-app.use("/author", authorRoutes);
-app.use("/category", categoryRoutes);
-app.use("/user", userRoutes);
-app.use(loginRoutes);
-app.use(registerRoutes);
+app.use("/api", apiRoutes);
 
 app.use(globalErrorHandler);
 
