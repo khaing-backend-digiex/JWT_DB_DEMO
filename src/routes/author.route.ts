@@ -6,7 +6,7 @@ const router = Router();
 const authorController = new AuthorController();
 
 router.post("/", authMiddleware, authorizeDynamic(), authorController.createAuthor);
-router.get("/", authMiddleware, authorizeDynamic(), authorController.getAllAuthors);
+router.get("/", authorController.getAllAuthors);
 router.get("/:id", authMiddleware, authorizeDynamic(), authorController.getAuthorById);
 router.put("/:id", authMiddleware, authorizeDynamic(), authorController.updateAuthor);
 router.delete("/:id", authMiddleware, authorizeDynamic(), authorController.deleteAuthor);

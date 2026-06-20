@@ -6,14 +6,15 @@ import { ApiResponse } from "../dto/response/api.response";
 import { ValidationError, validateBookQuery, validateCreateBook, validateUpdateBook } from "../validates/validated";
 import { AppException } from "../exception/app.exception";
 import { catchAsync } from "../utils/async.handler";
+import type { AuthRequest } from "../middleware/auth.middleware";
 
 const bookService = new BookService();
 
 export class BookController {
-    createBook = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    createBook = catchAsync(async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const parsedBody = validateCreateBook(req.body);
-            const result = await bookService.createBook(parsedBody);
+            const result = await bookService.createBook(parsedBody, req.user?.id);
             res.status(HttpStatus.CREATED).json(new ApiResponse(HttpStatus.CREATED, "Book created successfully", result));
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -23,14 +24,14 @@ export class BookController {
         }
     });
 
-    updateBook = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    updateBook = catchAsync(async (req: AuthRequest, res: Response): Promise<void> => {
         const id = req.query.id as string;
         if (!id) {
             throw new AppException(HttpStatus.BAD_REQUEST, "id query param is required");
         }
         try {
             const parsedBody = validateUpdateBook(req.body);
-            const result = await bookService.updateBook(id, parsedBody);
+            const result = await bookService.updateBook(id, parsedBody, req.user);
             res.status(HttpStatus.OK).json(new ApiResponse(HttpStatus.OK, "Book updated successfully", result));
         } catch (error) {
             if (error instanceof ValidationError) {
@@ -40,12 +41,12 @@ export class BookController {
         }
     });
 
-    deleteBook = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    deleteBook = catchAsync(async (req: AuthRequest, res: Response): Promise<void> => {
         const id = req.query.id as string;
         if (!id) {
             throw new AppException(HttpStatus.BAD_REQUEST, "id query param is required");
         }
-        await bookService.deleteBook(id);
+        await bookService.deleteBook(id, req.user);
         res.status(HttpStatus.NO_CONTENT).send();
     });
 

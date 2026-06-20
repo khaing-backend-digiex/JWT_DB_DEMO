@@ -6,6 +6,7 @@ export interface Book {
   content: string;
   publishedDate: string;
   createdDate: string;
+  createdBy?: number;
 }
 
 

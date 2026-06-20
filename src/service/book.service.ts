@@ -2,7 +2,7 @@ import { AppException } from '../exception/app.exception';
 import { v4 as uuidv4 } from 'uuid';
 import { bookRepository } from '../repository/book.repository';
 import type { CreateBookRequest, UpdateBookRequest, BookQueryRequest } from '../dto/request/book.create.request';
-import { ErrorMessage, HttpStatus } from '../constant/enum';
+import { ErrorMessage, HttpStatus, Role } from '../constant/enum';
 import { authorRepository } from '../repository/author.repository';
 
 export class BookService {
@@ -14,32 +14,43 @@ export class BookService {
     return book;
   }
 
-  async createBook(request: CreateBookRequest) {
+  async createBook(request: CreateBookRequest, userId?: number) {
     const { name, authorId, categoryIds, content, publishedDate } = request;
-    if (!name || !authorId || !categoryIds || !content || !publishedDate) {
-      throw new AppException(HttpStatus.BAD_REQUEST, ErrorMessage.VALIDATION_FAILED);
-    }
-    const book = await bookRepository.create({
+    const newBookData: any = {
       id: uuidv4(),
       ...request,
       createdDate: new Date().toISOString().split('T')[0]!,
-    });
+    };
+    if (userId !== undefined) {
+      newBookData.createdBy = userId;
+    }
+    const book = await bookRepository.create(newBookData);
     return book;
   }
 
-  async updateBook(id: string, request: UpdateBookRequest) {
+  async updateBook(id: string, request: UpdateBookRequest, user?: { id: number, roles: string[] }) {
     const book = await bookRepository.findById(id);
     if (!book) {
       throw new AppException(HttpStatus.NOT_FOUND, ErrorMessage.BOOK_NOT_FOUND);
+    }
+    if (user && user.roles.includes(Role.user) && !user.roles.includes(Role.admin) && !user.roles.includes(Role.manager)) {
+      if (book.createdBy !== user.id) {
+        throw new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Bạn không có quyền sửa sách của người khác");
+      }
     }
     const updatedBook = await bookRepository.update(id, request);
     return updatedBook;
   }
 
-  async deleteBook(id: string) {
+  async deleteBook(id: string, user?: { id: number, roles: string[] }) {
     const book = await bookRepository.findById(id);
     if (!book) {
       throw new AppException(HttpStatus.NOT_FOUND, ErrorMessage.BOOK_NOT_FOUND);
+    }
+    if (user && user.roles.includes(Role.user) && !user.roles.includes(Role.admin) && !user.roles.includes(Role.manager)) {
+      if (book.createdBy !== user.id) {
+        throw new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Bạn không có quyền xóa sách của người khác");
+      }
     }
     const deletedBook = await bookRepository.deleteById(id);
     return deletedBook;
@@ -87,18 +98,22 @@ export class BookService {
       result = result.sort((a, b) => {
         const sortBy = query.sortBy as keyof typeof a;
         if (query.sortOrder === 'asc') {
-          return a[sortBy] > b[sortBy] ? 1 : -1;
+          return (a[sortBy] ?? 0) > (b[sortBy] ?? 0) ? 1 : -1;
         } else {
-          return a[sortBy] < b[sortBy] ? 1 : -1;
+          return (a[sortBy] ?? 0) < (b[sortBy] ?? 0) ? 1 : -1;
         }
       });
     }
 
     if (query.offset !== undefined && query.limit !== undefined) {
-      result = result.slice(query.offset, query.offset + query.limit);
+      const offset = query.offset as number;
+      const limit = query.limit as number;
+      result = result.slice(offset, offset + limit);
     } else if (query.page !== undefined && query.limit !== undefined) {
-      const startIndex = (query.page - 1) * query.limit;
-      result = result.slice(startIndex, startIndex + query.limit);
+      const limit = query.limit as number;
+      const page = query.page as number;
+      const startIndex = (page - 1) * limit;
+      result = result.slice(startIndex, startIndex + limit);
     }
 
     return result;
