@@ -1,0 +1,34 @@
+export enum Role {
+    user = "user",
+    admin = "admin",
+    manager = "manager"
+}
+
+export enum HttpStatus {
+    OK = 200,
+    CREATED = 201,
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    UNAUTHORIZED = 401,
+    FORBIDDEN = 403,
+    NOT_FOUND = 404,
+    CONFLICT = 409,
+    INTERNAL_SERVER_ERROR = 500,
+    NOT_IMPLEMENTED = 501,
+}
+
+export enum ErrorMessage {
+    BOOK_NOT_FOUND = "Book not found",
+    AUTHOR_NOT_FOUND = "Author not found",
+    CATEGORY_NOT_FOUND = "One or more categories not found",
+    VALIDATION_FAILED = "Validation failed",
+    NAME_REQUIRED = "Name is required",
+    AUTHOR_ID_REQUIRED = "Author ID is required",
+    CATEGORY_IDS_NON_EMPTY = "Category IDs array must not be empty",
+    CONTENT_REQUIRED = "Content is required",
+    PUBLISHED_DATE_INVALID = "Published date must be a valid date in YYYY-MM-DD format",
+    INTERNAL_ERROR = "Internal server error",
+    NAME_ALREADY_EXISTS = "Name already exists",
+    UNAUTHORIZED = "Unauthorized",
+    FORBIDDEN = "Forbidden",
+}
