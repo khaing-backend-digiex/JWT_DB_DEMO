@@ -1,34 +1,26 @@
-# JWT Authentication & Role-Based Access Control Demo
-
-Dự án này là một API RESTful được xây dựng bằng **Node.js, Express, và TypeScript**, sử dụng **PostgreSQL** làm cơ sở dữ liệu. Nó cung cấp các chức năng CRUD cơ bản cho Books, Authors, Categories và Users. Hệ thống được trang bị phân quyền chặt chẽ (RBAC) bằng **JSON Web Token (JWT)** cùng với cơ chế xử lý lỗi toàn cầu (Global Error Handler).
+# JWT Authentication Demo
+Dự án này là một API RESTful được xây dựng bằng Node.js, Express, và TypeScript, sử dụng PostgreSQL làm cơ sở dữ liệu. Nó cung cấp các chức năng CRUD cơ bản cho Books, Authors và Users, đồng thời minh họa cách triển khai xác thực (Authentication) bằng JSON Web Token (JWT).
 
 ## Công nghệ sử dụng
 - **Ngôn ngữ:** TypeScript, Node.js
 - **Framework:** Express.js
-- **Cơ sở dữ liệu:** PostgreSQL (kết hợp với pg-promise)
-- **Xác thực & Phân quyền:** jsonwebtoken (JWT), bcryptjs (mã hóa mật khẩu)
+- **Cơ sở dữ liệu:** PostgreSQL (kết hợp với pg và pg-promise)
+- **Xác thực:** jsonwebtoken (JWT), bcryptjs (mã hóa mật khẩu)
 - **Migrations:** node-pg-migrate
 
-## Các Tính Năng Nổi Bật (Mới Cập Nhật)
-1. **Phân Quyền Theo Role (RBAC):**
-   - **Admin:** Toàn quyền hệ thống.
-   - **Manager:** Quản lý mọi thứ (trừ việc không thể Xóa/Sửa tài khoản của Admin và các Manager khác).
-   - **User:** Chỉ có thể Sửa/Xem thông tin của chính mình, và đặc biệt: **Chỉ có thể Sửa/Xóa những cuốn sách do chính mình tạo ra** (Tính năng Ownership bảo mật thông qua cột `created_by`).
-2. **Public API (Dành cho khách):**
-   - Các API lấy danh sách Sách (`GET /book`) và Tác giả (`GET /author`) được mở công khai, không yêu cầu đăng nhập.
-3. **Global Exception Handling:**
-   - Thay vì lạm dụng `try...catch` ở từng Controller, dự án sử dụng custom wrapper `catchAsync` kết hợp cùng `AppException`.
-   - Mọi lỗi trên toàn bộ hệ thống đều được hứng tập trung tại `globalErrorHandler` để trả về phản hồi `JSON` đạt chuẩn thống nhất.
+## Yêu cầu hệ thống
+- Node.js (phiên bản 18+ khuyến nghị)
+- PostgreSQL
 
 ## Hướng dẫn cài đặt
 
-### 1. Cài đặt dependencies
+### Cài đặt dependencies
 ```bash
 npm install
 ```
 
-### 2. Cấu hình biến môi trường
-Tạo một file `.env` ở thư mục gốc của dự án dựa trên các biến sau:
+### Cấu hình biến môi trường
+Tạo một file `.env` ở thư mục gốc của dự án dựa trên file `env.example`:
 
 ```env
 DATABASE_URL=postgres://user:password@localhost:5432/dbname
@@ -42,14 +34,12 @@ JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRES_IN=1h
 ```
 
-### 3. Chạy Database Migrations
-Dự án sử dụng `node-pg-migrate` để quản lý schema database. Chạy lệnh sau để khởi tạo bảng và thêm các cột cần thiết (như `created_by`):
+### Chạy Database Migrations
+Dự án sử dụng `node-pg-migrate` để quản lý schema database. Chạy lệnh sau để tạo các bảng cần thiết trong database:
 
 ```bash
 npm run migration:up
 ```
-
-*(Lưu ý: Nếu cần tạo migration mới, chạy lệnh `npm run migration:create -- <tên-migration>`)*
 
 ## Chạy ứng dụng
 
@@ -64,32 +54,23 @@ npm run migration:up
   npm start
   ```
 
-## Cấu trúc thư mục (`src`)
-- `routes/`: Định nghĩa các API endpoints (Auth, User, Book, Author, Category).
-- `controller/`: Gọn nhẹ, hứng Request và gọi logic từ Service (bọc bằng `catchAsync`).
-- `service/`: Nơi chứa toàn bộ Business Logic và kiểm tra Ownership của sách.
-- `repository/`: Tương tác trực tiếp với cơ sở dữ liệu qua các câu lệnh SQL.
-- `middleware/`: Chứa `globalErrorHandler`, `authMiddleware` (xác thực token), và `authorizeDynamic` (phân quyền linh hoạt).
-- `dto/`: Data Transfer Objects.
-- `interface/` (hoặc `models/`): Các Type interfaces của TypeScript.
-- `exception/`: Chứa lớp `AppException`.
-- `utils/`: Các hàm tiện ích dùng chung (`catchAsync`).
-- `constant/`: Khai báo các `Enum` chuẩn hóa (`HttpStatus`, `ErrorMessage`, `Role`).
+## Cấu trúc thư mục (src)
+- `routes/`: Định nghĩa các API endpoints (Auth, User, Book, Author).
+- `controller/`: Nhận request, gọi service xử lý logic và trả về response.
+- `service/`: Chứa các logic nghiệp vụ (business logic).
+- `repository/`: Tương tác trực tiếp với cơ sở dữ liệu.
+- `middleware/`: Chứa các middleware (như bắt lỗi, xác nhận JWT).
+- `dto/`: Data Transfer Objects dùng để validate hoặc định dạng dữ liệu đầu vào.
+- `interface/` (hoặc `entity/`): Các mô hình thực thể cơ bản.
+- `exception/`: Custom error classes.
+- `config/` (hoặc file cấu hình): Cấu hình hệ thống và môi trường.
+- `constant/`: Các hằng số được sử dụng trong dự án.
 
-## API Endpoints
-Mặc định API chạy tại `http://localhost:3000/api`. Tất cả các route đều được nhóm trong prefix `/api`.
+## API Endpoints chính
+Mặc định API sẽ chạy tại prefix `/api` (ví dụ: `http://localhost:3000/api`).
 
-- **Auth:** 
-  - `POST /api/register` (Đăng ký tài khoản)
-  - `POST /api/login` (Đăng nhập, trả về JWT)
-- **Users:** 
-  - `GET/PUT/DELETE /api/user` (Cần Token. User chỉ thao tác được với dữ liệu của mình)
-- **Books:** 
-  - `GET /api/book` **(Public - Không cần Token)**
-  - `POST /api/book` (Cần Token. Sách tạo ra sẽ tự động gắn `created_by` là ID của bạn)
-  - `PUT/DELETE /api/book?id=...` (Cần Token. Chỉ thao tác được nếu bạn là người tạo, hoặc mang role Manager/Admin)
-- **Authors:** 
-  - `GET /api/author` và `GET /api/author/:id` **(Public - Không cần Token)**
-  - `POST/PUT/DELETE /api/author` (Cần Token)
-- **Categories:** 
-  - `GET/POST/PUT/DELETE /api/category` (Cần Token)
+- **Auth:** Đăng ký, Đăng nhập (`/api/register`, `/api/login`)
+- **Users:** Quản lý thông tin người dùng (`/api/user`)
+- **Books:** Quản lý sách (`/api/book`)
+- **Authors:** Quản lý tác giả (`/api/author`)
+- **Categories:** Quản lý danh mục (`/api/category`)
