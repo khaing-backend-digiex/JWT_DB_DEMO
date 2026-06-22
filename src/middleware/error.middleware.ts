@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppException } from '../exception/app.exception';
 import { ApiResponse } from '../dto/response/api.response';
-import { HttpStatus } from '../constant/enum';
+import { HttpStatus } from '../constant/http-status.enum';
 
 export const globalErrorHandler = (
     err: Error,

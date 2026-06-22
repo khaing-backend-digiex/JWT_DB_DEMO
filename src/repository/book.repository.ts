@@ -2,11 +2,12 @@ import type { Book } from "../interface/book.interface";
 import db from '../database';
 
 export const bookRepository = {
-  async findAll(): Promise<Book[]> {
+  async findAll(limit: number, offset: number): Promise<Book[]> {
     return db.any(
       `SELECT id, name, author_id AS "authorId", category_ids AS "categoryIds", 
               content, published_date AS "publishedDate", created_date AS "createdDate", created_by AS "createdBy"
-       FROM books`
+       FROM books LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
   },
 

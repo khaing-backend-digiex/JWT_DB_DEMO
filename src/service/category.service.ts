@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { categoryRepository } from "../repository/category.repository";
 import { AppException } from '../exception/app.exception';
-import { HttpStatus, ErrorMessage } from "../constant/enum";
+import { HttpStatus } from "../constant/http-status.enum";
+import { ErrorMessage } from "../constant/error-message.enum";
 import type { CreateCategoryRequest } from "../dto/request/category.create.request";
 
 export class CategoryService {

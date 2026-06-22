@@ -1,4 +1,4 @@
-import { HttpStatus } from '../constant/enum';
+import { HttpStatus } from '../constant/http-status.enum';
 
 export class AppException extends Error {
     constructor(

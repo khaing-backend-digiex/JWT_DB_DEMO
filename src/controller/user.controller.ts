@@ -1,5 +1,5 @@
 import { ApiResponse } from "../dto/response/api.response";
-import { HttpStatus } from "../constant/enum";
+import { HttpStatus } from "../constant/http-status.enum";
 import { UserService } from "../service/user.service";
 import { Request, Response } from "express";
 import { catchAsync } from "../utils/async.handler";
@@ -13,7 +13,7 @@ export class UserController {
     });
 
     getUsers = catchAsync(async (req: Request, res: Response): Promise<void> => {
-        const users = await userService.getUsers();
+        const users = await userService.getUsers(parseInt(req.query.limit as string, 10) || 10, parseInt(req.query.offset as string, 10) || 0);
         res.status(HttpStatus.OK).json(new ApiResponse(HttpStatus.OK, "Users fetched successfully", users));
     });
 

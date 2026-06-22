@@ -1,6 +1,7 @@
 import express from "express";
 import { SERVER_CONFIG } from "./constant/constant";
 import { testDbConnection } from "./database";
+import { loadPermissionsToRAM } from "./cache/permission.cache";
 
 const app = express();
 
@@ -24,4 +25,5 @@ app.listen(SERVER_CONFIG.PORT, async () => {
 
 
   await testDbConnection();
+  await loadPermissionsToRAM();
 });

@@ -1,8 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { Role, HttpStatus, ErrorMessage } from "../constant/enum";
+import { Role } from "../constant/role.enum";
+import { HttpStatus } from "../constant/http-status.enum";
+import { ErrorMessage } from "../constant/error-message.enum";
+import { AppPermission } from "../constant/permission.enum";
 import { UserRepository } from "../repository/user.repository";
 import { AppException } from "../exception/app.exception";
+import { RolePermissionsCache } from "../cache/permission.cache";
 
 export interface AuthRequest extends Request {
     user?: {
@@ -58,46 +62,50 @@ export const authorize = (allowedRoles: string[]) => {
     };
 };
 
-export const authorizeDynamic = () => {
+export const requirePermission = (requiredPermissions: AppPermission[] = []) => {
     return async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
         try {
             const userRoles = req.user?.roles || [];
             const currentUsername = req.user?.username;
 
+            
             if (!userRoles || userRoles.length === 0) {
                 return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Access denied. No role assigned."));
             }
 
+            const userPermissions = userRoles.flatMap(role => RolePermissionsCache[role] || []);
+
+        
             if (userRoles.includes(Role.admin)) {
                 return next();
             }
-
+            const hasRequiredPermission = requiredPermissions.length === 0 || requiredPermissions.some(perm => userPermissions.includes(perm));
+            if (!hasRequiredPermission) {
+                return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Access denied. Insufficient permissions for this action."));
+            }
             const targetId = req.params.id as string | undefined;
-
-            if (userRoles.includes(Role.manager)) {
-                if (req.method === 'DELETE' || req.method === 'PUT' || req.method === 'PATCH') {
-                    if (targetId) {
-                        const userRepository = new UserRepository();
-                        const targetUser = await userRepository.findByUserName(targetId);
-                        if (targetUser) {
-                            const targetRoles = targetUser.roles || [];
-                            if (targetRoles.includes(Role.manager) || targetRoles.includes(Role.admin)) {
-                                return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Manager cannot update or delete other managers or admins."));
-                            }
+            if (userRoles.includes(Role.manager) && (requiredPermissions.includes(AppPermission.UPDATE_USER) || requiredPermissions.includes(AppPermission.DELETE_USER))) {
+                if (targetId) {
+                    const userRepository = new UserRepository();
+                    const targetUser = await userRepository.findByUserName(targetId);
+                    if (targetUser) {
+                        const targetRoles = targetUser.roles || [];
+                        if (targetRoles.includes(Role.manager) || targetRoles.includes(Role.admin)) {
+                            return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Manager cannot update or delete other managers or admins."));
                         }
                     }
                 }
                 return next();
             }
 
-            if (userRoles.includes(Role.user)) {
+            if (userRoles.includes(Role.user) && requiredPermissions.includes(AppPermission.UPDATE_OWN_PROFILE)) {
                 if (targetId && targetId === currentUsername) {
                     return next();
                 }
-                return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Access denied. You can only access your own resources."));
+                return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Access denied. You can only access your own profile."));
             }
 
-            return next(new AppException(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN, "Access denied. Insufficient permissions."));
+            return next();
         } catch (error) {
             return next(new AppException(HttpStatus.INTERNAL_SERVER_ERROR, ErrorMessage.INTERNAL_ERROR));
         }

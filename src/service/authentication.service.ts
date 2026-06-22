@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repository/user.repository";
 import { AppException } from '../exception/app.exception';
-import { HttpStatus } from "../constant/enum";
+import { HttpStatus } from "../constant/http-status.enum";
 
 const userRepository = new UserRepository();
 export class AuthenticationService {

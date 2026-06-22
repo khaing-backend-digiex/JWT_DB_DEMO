@@ -2,8 +2,8 @@ import type { Author } from "../models/author.entity";
 import db from '../database';
 
 export const authorRepository = {
-  async findAll(): Promise<Author[]> {
-    return db.any('SELECT * FROM authors');
+  async findAll( limit: number , offset: number ): Promise<Author[]> {
+    return db.any('SELECT * FROM authors LIMIT $1 OFFSET $2', [limit, offset]);
   },
 
   async findById(id: string): Promise<Author | undefined> {
@@ -34,5 +34,10 @@ export const authorRepository = {
   async deleteById(id: string): Promise<boolean> {
     const result = await db.result('DELETE FROM authors WHERE id = $1', [id]);
     return result.rowCount > 0;
+  },
+  async checkNameExists(name: string): Promise<boolean> {
+    const query = 'SELECT EXISTS(SELECT 1 FROM authors WHERE name = $1)';
+    const result = await db.one(query, [name]);
+    return result.exists; 
   },
 };

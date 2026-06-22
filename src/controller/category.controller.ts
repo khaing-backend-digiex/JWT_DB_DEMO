@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { CategoryService } from "../service/category.service";
-import { HttpStatus } from "../constant/enum";
-import { ValidationError, validateCreateCategory } from "../validates/validated";
+import { HttpStatus } from "../constant/http-status.enum";
+
 import { ApiResponse } from "../dto/response/api.response";
 import { catchAsync } from "../utils/async.handler";
 import { AppException } from "../exception/app.exception";
@@ -10,16 +10,8 @@ const categoryService = new CategoryService();
 
 export class CategoryController {
   createCategory = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    try {
-      const parsedBody = validateCreateCategory(req.body);
-      const result = await categoryService.createCategory(parsedBody);
-      res.status(HttpStatus.CREATED).json(new ApiResponse(HttpStatus.CREATED, "Category created successfully", result));
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw new AppException(HttpStatus.BAD_REQUEST, "Validation failed", error.issues.map((e) => e.message));
-      }
-      throw error;
-    }
+    const result = await categoryService.createCategory(req.body);
+    res.status(HttpStatus.CREATED).json(new ApiResponse(HttpStatus.CREATED, "Category created successfully", result));
   });
 
   getAllCategories = catchAsync(async (_req: Request, res: Response): Promise<void> => {

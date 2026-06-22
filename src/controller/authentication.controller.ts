@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { AuthenticationService } from "../service/authentication.service";
-import { HttpStatus } from "../constant/enum";
+import { HttpStatus } from "../constant/http-status.enum";
 import { ApiResponse } from "../dto/response/api.response";
 import { catchAsync } from "../utils/async.handler";
 

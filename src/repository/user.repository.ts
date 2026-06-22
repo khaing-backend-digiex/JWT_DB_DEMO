@@ -2,8 +2,8 @@ import type { User } from '../models/user.entity';
 import db from '../database';
 
 export class UserRepository {
-    async findAll(): Promise<User[]> {
-        const users = await db.any<User>('SELECT * FROM users');
+    async findAll(LIMIT: number, OFFSET: number): Promise<User[]> {
+        const users = await db.any<User>('SELECT * FROM users LIMIT $1 OFFSET $2', [LIMIT, OFFSET]);
         return users;
     }
     async findByUserName(username: string): Promise<User | null> {

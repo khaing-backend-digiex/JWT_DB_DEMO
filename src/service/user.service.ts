@@ -4,7 +4,7 @@ import type { User } from "../interface/user.interface";
 import type { CreateUserRequest, UpdateUserRequest } from "../dto/request/user.create.request";
 import type { UserResponse } from "../dto/response/user.response";
 import { AppException } from '../exception/app.exception';
-import { HttpStatus } from "../constant/enum";
+import { HttpStatus } from "../constant/http-status.enum";
 import * as bcrypt from "bcrypt";
 
 
@@ -33,9 +33,9 @@ export class UserService {
         return this.formatUserResponse(createdUser);
     }
 
-    async getUsers()
+    async getUsers(LIMIT: number, OFFSET: number)
     {
-        const users = await this.userRepository.findAll();
+        const users = await this.userRepository.findAll(LIMIT, OFFSET);
         return users;   
     }
     
